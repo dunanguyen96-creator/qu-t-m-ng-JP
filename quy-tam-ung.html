@@ -588,13 +588,34 @@
     </div>
   </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
 (function(){
   const STORAGE_KEY = 'fund-data';
   const RECEIPTS_KEY = 'fund-receipts'; // local cache: { [expenseId]: {name, dataUrl} }
   const SHARED = true;
 
-  // ---- Google Sheets backend (qua Google Apps Script) ----
+  // ---- Firebase Realtime Database (đồng bộ 2 chiều, nhiều thiết bị) ----
+  // Dán object firebaseConfig từ Firebase Console vào đây. Để apiKey trống nếu chưa có.
+  const firebaseConfig = {
+    apiKey: "",
+    authDomain: "",
+    databaseURL: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
+  };
+  const USE_FIREBASE = !!firebaseConfig.apiKey && !!firebaseConfig.databaseURL;
+  let fbDb = null;
+  if(USE_FIREBASE){
+    const fbApp = initializeApp(firebaseConfig);
+    fbDb = getDatabase(fbApp);
+  }
+
+  // ---- Google Sheets backend (qua Google Apps Script) — dự phòng nếu không dùng Firebase ----
   // Sau khi deploy Apps Script (xem hướng dẫn), dán URL Web App vào đây.
   // Để trống ("") nếu chưa có — web sẽ tự dùng bộ nhớ trình duyệt (không đồng bộ nhiều thiết bị).
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLs0OvJOf6KznK0KJXbdAhcQwB5FWvsmzFFqj_VGrWPvzJrT62wuf_-lAmPR7HlXIY6A/exec';
@@ -608,6 +629,16 @@
   const fmt = n => (Number(n)||0).toLocaleString('vi-VN') + ' ₫';
   const todayStr = () => new Date().toISOString().slice(0,10);
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+  // ---- Firebase helpers: array <-> object map keyed by id ----
+  function arrayToFbObj(arr){
+    const o = {};
+    (arr||[]).forEach(item=>{ o[item.id] = item; });
+    return o;
+  }
+  function fbObjToArray(obj){
+    return obj ? Object.keys(obj).map(k => ({ id:k, ...obj[k] })) : [];
+  }
 
   // ---- Local receipt cache (hóa đơn chỉ lưu trên từng máy) ----
   function getReceiptsCache(){
@@ -666,9 +697,29 @@
   });
 
   const USE_PLATFORM_STORAGE = (typeof window.storage !== 'undefined' && window.storage !== null);
-  const USE_SHEETS_BACKEND = !USE_PLATFORM_STORAGE && !!APPS_SCRIPT_URL;
+  const USE_SHEETS_BACKEND = !USE_PLATFORM_STORAGE && !USE_FIREBASE && !!APPS_SCRIPT_URL;
+
+  function firebaseFundRef(){ return ref(fbDb, 'fundData'); }
+
+  // Firebase: lắng nghe liên tục — bất kỳ thiết bị nào ghi dữ liệu, mọi thiết bị đang mở
+  // web đều tự cập nhật ngay (đồng bộ 2 chiều thật sự, không cần tải lại trang).
+  function startFirebaseSync(){
+    onValue(firebaseFundRef(), (snapshot)=>{
+      const val = snapshot.val() || {};
+      data.advances = fbObjToArray(val.advances).map(a => ({...a, amount: Number(a.amount)||0}));
+      data.expenses = fbObjToArray(val.expenses).map(e => ({...e, amount: Number(e.amount)||0}));
+      render();
+      document.getElementById('lastUpdated').textContent = 'Đã đồng bộ · ' + new Date().toLocaleString('vi-VN');
+    }, (err)=>{
+      document.getElementById('lastUpdated').textContent = 'Lỗi kết nối Firebase — kiểm tra lại cấu hình/Rules.';
+    });
+  }
 
   async function loadData(){
+    if(USE_FIREBASE){
+      startFirebaseSync(); // tự render() khi có dữ liệu, không cần chờ ở đây
+      return;
+    }
     try{
       if(USE_PLATFORM_STORAGE){
         const res = await window.storage.get(STORAGE_KEY, SHARED);
@@ -693,7 +744,7 @@
         }
       }
     }catch(e){
-      // Sheets lỗi/offline -> dùng bản cache gần nhất trên máy này
+      // backend lỗi/offline -> dùng bản cache gần nhất trên máy này
       try{
         const raw = localStorage.getItem(STORAGE_KEY);
         if(raw){
@@ -710,7 +761,14 @@
   async function saveData(){
     document.getElementById('lastUpdated').textContent = 'Đang lưu...';
     try{
-      if(USE_PLATFORM_STORAGE){
+      if(USE_FIREBASE){
+        await set(firebaseFundRef(), {
+          advances: arrayToFbObj(data.advances),
+          expenses: arrayToFbObj(data.expenses)
+        });
+        // onValue ở trên sẽ tự cập nhật lại 'Đã đồng bộ...' cho mọi thiết bị
+        return;
+      } else if(USE_PLATFORM_STORAGE){
         await window.storage.set(STORAGE_KEY, JSON.stringify(data), SHARED);
       } else if(USE_SHEETS_BACKEND){
         const payload = {
