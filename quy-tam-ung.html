@@ -633,13 +633,24 @@
     ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.remove('show'); });
   });
 
+  const USE_PLATFORM_STORAGE = (typeof window.storage !== 'undefined' && window.storage !== null);
+
   async function loadData(){
     try{
-      const res = await window.storage.get(STORAGE_KEY, SHARED);
-      if(res && res.value){
-        const parsed = JSON.parse(res.value);
-        data.advances = parsed.advances || [];
-        data.expenses = parsed.expenses || [];
+      if(USE_PLATFORM_STORAGE){
+        const res = await window.storage.get(STORAGE_KEY, SHARED);
+        if(res && res.value){
+          const parsed = JSON.parse(res.value);
+          data.advances = parsed.advances || [];
+          data.expenses = parsed.expenses || [];
+        }
+      } else {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(raw){
+          const parsed = JSON.parse(raw);
+          data.advances = parsed.advances || [];
+          data.expenses = parsed.expenses || [];
+        }
       }
     }catch(e){
       // key not found yet or storage unavailable — start empty
@@ -650,7 +661,11 @@
   async function saveData(){
     document.getElementById('lastUpdated').textContent = 'Đang lưu...';
     try{
-      await window.storage.set(STORAGE_KEY, JSON.stringify(data), SHARED);
+      if(USE_PLATFORM_STORAGE){
+        await window.storage.set(STORAGE_KEY, JSON.stringify(data), SHARED);
+      } else {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
       document.getElementById('lastUpdated').textContent = 'Đã lưu · ' + new Date().toLocaleString('vi-VN');
     }catch(e){
       document.getElementById('lastUpdated').textContent = 'Không thể lưu — vui lòng thử lại.';
