@@ -591,7 +591,15 @@
 <script>
 (function(){
   const STORAGE_KEY = 'fund-data';
+  const RECEIPTS_KEY = 'fund-receipts'; // local cache: { [expenseId]: {name, dataUrl} }
   const SHARED = true;
+
+  // ---- Google Sheets backend (qua Google Apps Script) ----
+  // Sau khi deploy Apps Script (xem hướng dẫn), dán URL Web App vào đây.
+  // Để trống ("") nếu chưa có — web sẽ tự dùng bộ nhớ trình duyệt (không đồng bộ nhiều thiết bị).
+  const APPS_SCRIPT_URL = '';
+  const APPS_SCRIPT_SECRET = 'quy-tam-ung-jp-2026'; // phải khớp với SECRET trong Apps Script
+
   let data = { advances: [], expenses: [] };
   let editingAdvanceId = null;
   let editingExpenseId = null;
@@ -600,6 +608,30 @@
   const fmt = n => (Number(n)||0).toLocaleString('vi-VN') + ' ₫';
   const todayStr = () => new Date().toISOString().slice(0,10);
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+  // ---- Local receipt cache (hóa đơn chỉ lưu trên từng máy) ----
+  function getReceiptsCache(){
+    try{ return JSON.parse(localStorage.getItem(RECEIPTS_KEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function setReceiptFor(expenseId, receipt){
+    const cache = getReceiptsCache();
+    if(receipt){ cache[expenseId] = receipt; } else { delete cache[expenseId]; }
+    localStorage.setItem(RECEIPTS_KEY, JSON.stringify(cache));
+  }
+  function deleteReceiptFor(expenseId){
+    const cache = getReceiptsCache();
+    delete cache[expenseId];
+    localStorage.setItem(RECEIPTS_KEY, JSON.stringify(cache));
+  }
+  function applyLocalReceipts(){
+    const cache = getReceiptsCache();
+    data.expenses.forEach(e=>{
+      const r = cache[e.id];
+      e.receiptDataUrl = r ? r.dataUrl : (e.receiptDataUrl || null);
+      e.receiptName = r ? r.name : (e.receiptName || null);
+    });
+  }
 
   // ---- Amount input: live "1.234.567" formatting while typing ----
   function digitsOnly(str){ return (str||'').replace(/[^\d]/g, ''); }
@@ -634,6 +666,7 @@
   });
 
   const USE_PLATFORM_STORAGE = (typeof window.storage !== 'undefined' && window.storage !== null);
+  const USE_SHEETS_BACKEND = !USE_PLATFORM_STORAGE && !!APPS_SCRIPT_URL;
 
   async function loadData(){
     try{
@@ -644,6 +677,13 @@
           data.advances = parsed.advances || [];
           data.expenses = parsed.expenses || [];
         }
+      } else if(USE_SHEETS_BACKEND){
+        const res = await fetch(APPS_SCRIPT_URL, { method:'GET' });
+        const json = await res.json();
+        data.advances = (json.advances || []).map(a => ({...a, amount: Number(a.amount)||0}));
+        data.expenses = (json.expenses || []).map(e => ({...e, amount: Number(e.amount)||0}));
+        applyLocalReceipts();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); // cache để mở offline vẫn thấy
       } else {
         const raw = localStorage.getItem(STORAGE_KEY);
         if(raw){
@@ -653,7 +693,16 @@
         }
       }
     }catch(e){
-      // key not found yet or storage unavailable — start empty
+      // Sheets lỗi/offline -> dùng bản cache gần nhất trên máy này
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(raw){
+          const parsed = JSON.parse(raw);
+          data.advances = parsed.advances || [];
+          data.expenses = parsed.expenses || [];
+          applyLocalReceipts();
+        }
+      }catch(e2){}
     }
     render();
   }
@@ -663,6 +712,18 @@
     try{
       if(USE_PLATFORM_STORAGE){
         await window.storage.set(STORAGE_KEY, JSON.stringify(data), SHARED);
+      } else if(USE_SHEETS_BACKEND){
+        const payload = {
+          secret: APPS_SCRIPT_SECRET,
+          advances: data.advances.map(a => ({ id:a.id, date:a.date, note:a.note||'', amount:a.amount })),
+          expenses: data.expenses.map(e => ({ id:e.id, date:e.date, name:e.name, amount:e.amount }))
+        };
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // tránh CORS preflight
+          body: JSON.stringify(payload)
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); // cache kèm hóa đơn cho máy này
       } else {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       }
@@ -671,6 +732,7 @@
       document.getElementById('lastUpdated').textContent = 'Không thể lưu — vui lòng thử lại.';
     }
   }
+
 
   function totals(){
     const totalAdvance = data.advances.reduce((s,a)=>s+Number(a.amount||0),0);
@@ -757,7 +819,9 @@
     document.querySelectorAll('[data-del-exp]').forEach(b=>{
       b.onclick = async ()=>{
         if(confirm('Xóa khoản chi này?')){
-          data.expenses = data.expenses.filter(e=>e.id !== b.getAttribute('data-del-exp'));
+          const delId = b.getAttribute('data-del-exp');
+          data.expenses = data.expenses.filter(e=>e.id !== delId);
+          deleteReceiptFor(delId);
           render(); await saveData();
         }
       };
@@ -873,18 +937,22 @@
       document.getElementById('expErr').style.display = 'block';
       return;
     }
+    let expId;
     if(editingExpenseId){
       const e = data.expenses.find(x=>x.id===editingExpenseId);
       e.name = name; e.amount = amount; e.date = date;
       e.receiptDataUrl = pendingReceipt ? pendingReceipt.dataUrl : null;
       e.receiptName = pendingReceipt ? pendingReceipt.name : null;
+      expId = e.id;
     } else {
+      expId = uid();
       data.expenses.push({
-        id: uid(), name, amount, date,
+        id: expId, name, amount, date,
         receiptDataUrl: pendingReceipt ? pendingReceipt.dataUrl : null,
         receiptName: pendingReceipt ? pendingReceipt.name : null
       });
     }
+    setReceiptFor(expId, pendingReceipt ? { name: pendingReceipt.name, dataUrl: pendingReceipt.dataUrl } : null);
     closeOverlay('expenseOverlay');
     render(); await saveData();
   };
