@@ -415,6 +415,22 @@
 </head>
 <body>
 
+  <!-- PIN gate: mã chung nội bộ, chặn người ngoài xem/sửa tình cờ khi có link -->
+  <div class="overlay show" id="pinOverlay" style="z-index:200;">
+    <div class="modal" style="max-width:340px;text-align:center;">
+      <h3>Nhập mã truy cập</h3>
+      <div class="modal-sub">Nhập mã PIN nội bộ để vào Quỹ tạm ứng.</div>
+      <div class="field">
+        <input type="password" id="pinInput" inputmode="numeric" placeholder="Mã PIN" style="text-align:center;font-size:20px;letter-spacing:6px;">
+      </div>
+      <div class="err" id="pinErr">Mã PIN không đúng, vui lòng thử lại.</div>
+      <div class="modal-actions" style="justify-content:center;">
+        <button class="btn btn-gold" id="pinSubmitBtn">Vào quỹ</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="appRoot" style="display:none;">
   <div class="topbar">
     <div class="brand">
       <img src="data:image/png;base64,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" alt="John&Partners"/>
@@ -570,6 +586,7 @@
           <div id="fileDropContent">Nhấn để chọn file hóa đơn</div>
         </div>
         <input type="file" id="expFile" accept="image/*,application/pdf" style="display:none;">
+        <button type="button" class="btn-text danger" id="removeReceiptBtn" style="display:none;margin-top:6px;">Xóa hóa đơn</button>
       </div>
       <div class="err" id="expErr">Vui lòng nhập tên và số tiền hợp lệ.</div>
       <div class="modal-actions">
@@ -587,18 +604,23 @@
       <div id="receiptViewBody" style="margin-top:12px;"></div>
     </div>
   </div>
+  </div><!-- /#appRoot -->
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
-
 (function(){
   const STORAGE_KEY = 'fund-data';
-  const RECEIPTS_KEY = 'fund-receipts'; // local cache: { [expenseId]: {name, dataUrl} }
+  const RECEIPTS_KEY = 'fund-receipts'; // local cache: { [expenseId]: {name, dataUrl} } — chỉ dùng khi CHƯA cấu hình Firebase
   const SHARED = true;
 
-  // ---- Firebase Realtime Database (đồng bộ 2 chiều, nhiều thiết bị) ----
+  // ---- Mã PIN chung để vào web (chặn người ngoài xem/sửa khi lỡ có link) ----
+  // Đổi mã PIN tại đây. Đây chỉ là lớp bảo vệ đơn giản phía trình duyệt, không thay
+  // thế cho Firebase Rules — xem hướng dẫn HUONG-DAN-FIREBASE.md để cấu hình Rules đúng.
+  const SHARED_PIN = "2609";
+  const PIN_SESSION_KEY = 'fund-pin-ok';
+
+  // ---- Firebase Realtime Database + Storage (đồng bộ 2 chiều, nhiều thiết bị) ----
   // Dán object firebaseConfig từ Firebase Console vào đây. Để apiKey trống nếu chưa có.
+  // Xem hướng dẫn từng bước trong file HUONG-DAN-FIREBASE.md ở cùng thư mục.
   const firebaseConfig = {
     apiKey: "",
     authDomain: "",
@@ -609,10 +631,45 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     appId: ""
   };
   const USE_FIREBASE = !!firebaseConfig.apiKey && !!firebaseConfig.databaseURL;
-  let fbDb = null;
-  if(USE_FIREBASE){
-    const fbApp = initializeApp(firebaseConfig);
-    fbDb = getDatabase(fbApp);
+  let fbDb = null, fbAuth = null, fbStorage = null, fbApp = null;
+  // SDK Firebase được tải bằng dynamic import() và CHỈ khi USE_FIREBASE=true — nhờ vậy khi
+  // chưa dán cấu hình Firebase, web hoạt động đầy đủ (PIN, lưu trên máy...) mà không phụ
+  // thuộc mạng/CDN của Firebase (tránh trắng trang nếu mạng chặn gstatic.com).
+  let dbRef, dbOnValue, dbSet, authSignInAnonymously, stRef, stUploadString, stGetDownloadURL, stDeleteObject;
+  let firebaseReadyPromise = null;
+
+  function initFirebase(){
+    if(!USE_FIREBASE) return Promise.resolve();
+    if(firebaseReadyPromise) return firebaseReadyPromise;
+    firebaseReadyPromise = (async ()=>{
+      const [{ initializeApp }, dbMod, authMod] = await Promise.all([
+        import("https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js"),
+        import("https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js"),
+        import("https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js")
+      ]);
+      fbApp = initializeApp(firebaseConfig);
+      fbDb = dbMod.getDatabase(fbApp);
+      dbRef = dbMod.ref; dbOnValue = dbMod.onValue; dbSet = dbMod.set;
+      fbAuth = authMod.getAuth(fbApp);
+      authSignInAnonymously = authMod.signInAnonymously;
+      if(firebaseConfig.storageBucket){
+        const stMod = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js");
+        fbStorage = stMod.getStorage(fbApp);
+        stRef = stMod.ref; stUploadString = stMod.uploadString;
+        stGetDownloadURL = stMod.getDownloadURL; stDeleteObject = stMod.deleteObject;
+      }
+    })();
+    return firebaseReadyPromise;
+  }
+
+  // Đăng nhập ẩn danh nền (không có màn hình đăng nhập) — kết hợp với Firebase Rules
+  // yêu cầu "auth != null" để chặn người lạ đọc/ghi thẳng vào database nếu không qua web này.
+  async function ensureFirebaseAuth(){
+    if(!USE_FIREBASE) return;
+    try{
+      await initFirebase();
+      await authSignInAnonymously(fbAuth);
+    }catch(e){ /* để loadData()/saveData() tự chuyển sang dự phòng */ }
   }
 
   // ---- Google Sheets backend (qua Google Apps Script) — dự phòng nếu không dùng Firebase ----
@@ -624,7 +681,8 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   let data = { advances: [], expenses: [] };
   let editingAdvanceId = null;
   let editingExpenseId = null;
-  let pendingReceipt = null; // {name, dataUrl} for the expense modal in progress
+  // {name, type, dataUrl, isNew} khi chọn file mới, hoặc {name, type, url, isNew:false} khi giữ nguyên hóa đơn đã có
+  let pendingReceipt = null;
 
   const fmt = n => (Number(n)||0).toLocaleString('vi-VN') + ' ₫';
   const todayStr = () => new Date().toISOString().slice(0,10);
@@ -664,6 +722,21 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     });
   }
 
+  // ---- Hóa đơn trên Firebase Storage (đồng bộ mọi thiết bị) ----
+  async function uploadReceiptToStorage(expenseId, receipt){
+    await initFirebase();
+    if(!fbStorage) throw new Error('Firebase Storage chưa được cấu hình (thiếu storageBucket).');
+    const path = 'receipts/' + expenseId;
+    const sRef = stRef(fbStorage, path);
+    await stUploadString(sRef, receipt.dataUrl, 'data_url');
+    const url = await stGetDownloadURL(sRef);
+    return { url, path };
+  }
+  async function deleteReceiptFromStorage(path){
+    if(!fbStorage || !path) return;
+    try{ await stDeleteObject(stRef(fbStorage, path)); }catch(e){ /* file có thể đã bị xóa trước đó */ }
+  }
+
   // ---- Amount input: live "1.234.567" formatting while typing ----
   function digitsOnly(str){ return (str||'').replace(/[^\d]/g, ''); }
   function formatGrouped(digits){
@@ -697,29 +770,29 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   });
 
   const USE_PLATFORM_STORAGE = (typeof window.storage !== 'undefined' && window.storage !== null);
-  const USE_SHEETS_BACKEND = !USE_PLATFORM_STORAGE && !USE_FIREBASE && !!APPS_SCRIPT_URL;
+  // Google Sheets đóng vai trò DỰ PHÒNG: dùng khi Firebase chưa cấu hình, hoặc khi Firebase lỗi/mất mạng lúc lưu.
+  const USE_SHEETS_BACKEND = !USE_PLATFORM_STORAGE && !!APPS_SCRIPT_URL;
 
-  function firebaseFundRef(){ return ref(fbDb, 'fundData'); }
+  function firebaseFundRef(){ return dbRef(fbDb, 'fundData'); }
 
   // Firebase: lắng nghe liên tục — bất kỳ thiết bị nào ghi dữ liệu, mọi thiết bị đang mở
   // web đều tự cập nhật ngay (đồng bộ 2 chiều thật sự, không cần tải lại trang).
   function startFirebaseSync(){
-    onValue(firebaseFundRef(), (snapshot)=>{
+    dbOnValue(firebaseFundRef(), (snapshot)=>{
       const val = snapshot.val() || {};
       data.advances = fbObjToArray(val.advances).map(a => ({...a, amount: Number(a.amount)||0}));
       data.expenses = fbObjToArray(val.expenses).map(e => ({...e, amount: Number(e.amount)||0}));
       render();
       document.getElementById('lastUpdated').textContent = 'Đã đồng bộ · ' + new Date().toLocaleString('vi-VN');
-    }, (err)=>{
-      document.getElementById('lastUpdated').textContent = 'Lỗi kết nối Firebase — kiểm tra lại cấu hình/Rules.';
+    }, async (err)=>{
+      // Firebase lỗi/mất mạng -> dùng dữ liệu dự phòng (Google Sheets/cache máy) để không bị trắng trang
+      document.getElementById('lastUpdated').textContent = 'Mất kết nối Firebase — đang dùng dữ liệu dự phòng...';
+      await loadFromFallback();
+      render();
     });
   }
 
-  async function loadData(){
-    if(USE_FIREBASE){
-      startFirebaseSync(); // tự render() khi có dữ liệu, không cần chờ ở đây
-      return;
-    }
+  async function loadFromFallback(){
     try{
       if(USE_PLATFORM_STORAGE){
         const res = await window.storage.get(STORAGE_KEY, SHARED);
@@ -741,6 +814,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
           const parsed = JSON.parse(raw);
           data.advances = parsed.advances || [];
           data.expenses = parsed.expenses || [];
+          applyLocalReceipts();
         }
       }
     }catch(e){
@@ -755,20 +829,21 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
         }
       }catch(e2){}
     }
+  }
+
+  async function loadData(){
+    if(USE_FIREBASE){
+      await ensureFirebaseAuth();
+      startFirebaseSync(); // tự render() khi có dữ liệu, không cần chờ ở đây
+      return;
+    }
+    await loadFromFallback();
     render();
   }
 
-  async function saveData(){
-    document.getElementById('lastUpdated').textContent = 'Đang lưu...';
+  async function saveToFallback(prefix){
     try{
-      if(USE_FIREBASE){
-        await set(firebaseFundRef(), {
-          advances: arrayToFbObj(data.advances),
-          expenses: arrayToFbObj(data.expenses)
-        });
-        // onValue ở trên sẽ tự cập nhật lại 'Đã đồng bộ...' cho mọi thiết bị
-        return;
-      } else if(USE_PLATFORM_STORAGE){
+      if(USE_PLATFORM_STORAGE){
         await window.storage.set(STORAGE_KEY, JSON.stringify(data), SHARED);
       } else if(USE_SHEETS_BACKEND){
         const payload = {
@@ -785,10 +860,31 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       } else {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       }
-      document.getElementById('lastUpdated').textContent = 'Đã lưu · ' + new Date().toLocaleString('vi-VN');
+      document.getElementById('lastUpdated').textContent = prefix + new Date().toLocaleString('vi-VN');
     }catch(e){
-      document.getElementById('lastUpdated').textContent = 'Không thể lưu — vui lòng thử lại.';
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      document.getElementById('lastUpdated').textContent = 'Không thể lưu lên máy chủ — đã lưu tạm trên máy này.';
     }
+  }
+
+  async function saveData(){
+    document.getElementById('lastUpdated').textContent = 'Đang lưu...';
+    if(USE_FIREBASE){
+      try{
+        await initFirebase();
+        await dbSet(firebaseFundRef(), {
+          advances: arrayToFbObj(data.advances),
+          expenses: arrayToFbObj(data.expenses)
+        });
+        // onValue ở trên sẽ tự cập nhật lại 'Đã đồng bộ...' cho mọi thiết bị
+        return;
+      }catch(e){
+        // Firebase lỗi/mất mạng -> dùng phương án dự phòng để không mất dữ liệu vừa nhập
+        await saveToFallback('Đã lưu tạm (Firebase lỗi, dùng dự phòng) · ');
+        return;
+      }
+    }
+    await saveToFallback('Đã lưu · ');
   }
 
 
@@ -839,7 +935,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
         <td data-label="Tên khoản chi">${escapeHtml(e.name)}</td>
         <td data-label="Số tiền" class="amount expense">− ${fmt(e.amount)}</td>
         <td data-label="Hóa đơn">${
-          e.receiptDataUrl
+          (e.receiptURL || e.receiptDataUrl)
             ? `<a href="#" class="receipt-link" data-view-receipt="${e.id}">Xem file</a>`
             : `<span class="no-receipt">Không có</span>`
         }</td>
@@ -878,8 +974,10 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       b.onclick = async ()=>{
         if(confirm('Xóa khoản chi này?')){
           const delId = b.getAttribute('data-del-exp');
+          const delExp = data.expenses.find(e=>e.id === delId);
           data.expenses = data.expenses.filter(e=>e.id !== delId);
           deleteReceiptFor(delId);
+          if(delExp && delExp.receiptPath) await deleteReceiptFromStorage(delExp.receiptPath);
           render(); await saveData();
         }
       };
@@ -895,11 +993,13 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
 
   function showReceipt(exp){
     const body = document.getElementById('receiptViewBody');
-    if(!exp || !exp.receiptDataUrl){ body.innerHTML = '<p>Không có file.</p>'; }
-    else if(exp.receiptDataUrl.startsWith('data:application/pdf')){
-      body.innerHTML = `<a class="btn btn-primary" href="${exp.receiptDataUrl}" download="${escapeHtml(exp.receiptName||'hoadon.pdf')}">Tải file PDF: ${escapeHtml(exp.receiptName||'')}</a>`;
+    const src = exp ? (exp.receiptURL || exp.receiptDataUrl) : null;
+    const isPdf = exp && ((exp.receiptType||'').includes('pdf') || (src||'').startsWith('data:application/pdf') || /\.pdf($|\?)/i.test(exp.receiptName||''));
+    if(!exp || !src){ body.innerHTML = '<p>Không có file.</p>'; }
+    else if(isPdf){
+      body.innerHTML = `<a class="btn btn-primary" href="${src}" target="_blank" rel="noopener" download="${escapeHtml(exp.receiptName||'hoadon.pdf')}">Tải file PDF: ${escapeHtml(exp.receiptName||'')}</a>`;
     } else {
-      body.innerHTML = `<img src="${exp.receiptDataUrl}" style="max-width:100%;max-height:60vh;border:1px solid var(--line);">`;
+      body.innerHTML = `<img src="${src}" style="max-width:100%;max-height:60vh;border:1px solid var(--line);">`;
     }
     openOverlay('receiptOverlay');
   }
@@ -940,6 +1040,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     pendingReceipt = null;
     document.getElementById('fileDropContent').innerHTML = 'Nhấn để chọn file hóa đơn';
     document.getElementById('expFile').value = '';
+    document.getElementById('removeReceiptBtn').style.display = 'none';
   }
 
   function openExpenseModal(id){
@@ -950,8 +1051,9 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     setAmountInput('expAmount', e ? e.amount : '');
     document.getElementById('expDate').value = e ? e.date : todayStr();
     document.getElementById('expErr').style.display = 'none';
-    if(e && e.receiptDataUrl){
-      pendingReceipt = { name: e.receiptName, dataUrl: e.receiptDataUrl };
+    const existingSrc = e ? (e.receiptURL || e.receiptDataUrl) : null;
+    if(existingSrc){
+      pendingReceipt = { name: e.receiptName, type: e.receiptType, url: e.receiptURL, dataUrl: e.receiptDataUrl, isNew:false };
       renderFileDropPreview();
     } else {
       resetFileDrop();
@@ -962,14 +1064,21 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
 
   function renderFileDropPreview(){
     if(!pendingReceipt){ resetFileDrop(); return; }
-    if(pendingReceipt.dataUrl.startsWith('data:image')){
+    const src = pendingReceipt.dataUrl || pendingReceipt.url;
+    const isPdf = (pendingReceipt.type||'').includes('pdf') || (src||'').startsWith('data:application/pdf');
+    if(!isPdf){
       document.getElementById('fileDropContent').innerHTML =
-        `<img src="${pendingReceipt.dataUrl}"><div class="fname">${escapeHtml(pendingReceipt.name)} — nhấn để đổi</div>`;
+        `<img src="${src}"><div class="fname">${escapeHtml(pendingReceipt.name)} — nhấn để đổi</div>`;
     } else {
       document.getElementById('fileDropContent').innerHTML =
         `<div class="fname">📄 ${escapeHtml(pendingReceipt.name)} — nhấn để đổi</div>`;
     }
+    document.getElementById('removeReceiptBtn').style.display = 'inline-block';
   }
+
+  document.getElementById('removeReceiptBtn').addEventListener('click', ()=>{
+    resetFileDrop();
+  });
 
   document.getElementById('fileDrop').addEventListener('click', ()=> document.getElementById('expFile').click());
   document.getElementById('expFile').addEventListener('change', (e)=>{
@@ -981,7 +1090,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     }
     const reader = new FileReader();
     reader.onload = ()=>{
-      pendingReceipt = { name: file.name, dataUrl: reader.result };
+      pendingReceipt = { name: file.name, type: file.type, dataUrl: reader.result, isNew:true };
       renderFileDropPreview();
     };
     reader.readAsDataURL(file);
@@ -995,32 +1104,78 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       document.getElementById('expErr').style.display = 'block';
       return;
     }
-    let expId;
-    if(editingExpenseId){
-      const e = data.expenses.find(x=>x.id===editingExpenseId);
-      e.name = name; e.amount = amount; e.date = date;
-      e.receiptDataUrl = pendingReceipt ? pendingReceipt.dataUrl : null;
-      e.receiptName = pendingReceipt ? pendingReceipt.name : null;
-      expId = e.id;
-    } else {
-      expId = uid();
-      data.expenses.push({
-        id: expId, name, amount, date,
-        receiptDataUrl: pendingReceipt ? pendingReceipt.dataUrl : null,
-        receiptName: pendingReceipt ? pendingReceipt.name : null
-      });
+    const saveBtn = document.getElementById('expSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Đang lưu...';
+    try{
+      const existing = editingExpenseId ? data.expenses.find(x=>x.id===editingExpenseId) : null;
+      const expId = existing ? existing.id : uid();
+      let receiptFields = existing
+        ? { receiptURL: existing.receiptURL||null, receiptPath: existing.receiptPath||null, receiptDataUrl: existing.receiptDataUrl||null, receiptName: existing.receiptName||null, receiptType: existing.receiptType||null }
+        : { receiptURL:null, receiptPath:null, receiptDataUrl:null, receiptName:null, receiptType:null };
+
+      if(pendingReceipt === null){
+        // người dùng đã bỏ hóa đơn khỏi khoản chi này
+        if(receiptFields.receiptPath) await deleteReceiptFromStorage(receiptFields.receiptPath);
+        receiptFields = { receiptURL:null, receiptPath:null, receiptDataUrl:null, receiptName:null, receiptType:null };
+      } else if(pendingReceipt.isNew){
+        if(USE_FIREBASE){
+          if(receiptFields.receiptPath) await deleteReceiptFromStorage(receiptFields.receiptPath); // thay hóa đơn cũ
+          const { url, path } = await uploadReceiptToStorage(expId, pendingReceipt);
+          receiptFields = { receiptURL:url, receiptPath:path, receiptDataUrl:null, receiptName:pendingReceipt.name, receiptType:pendingReceipt.type };
+        } else {
+          receiptFields = { receiptURL:null, receiptPath:null, receiptDataUrl:pendingReceipt.dataUrl, receiptName:pendingReceipt.name, receiptType:pendingReceipt.type };
+        }
+      }
+      // pendingReceipt tồn tại nhưng isNew=false -> giữ nguyên hóa đơn đã có, không cần làm gì thêm
+
+      if(existing){
+        Object.assign(existing, { name, amount, date }, receiptFields);
+      } else {
+        data.expenses.push({ id: expId, name, amount, date, ...receiptFields });
+      }
+      setReceiptFor(expId, receiptFields.receiptDataUrl ? { name: receiptFields.receiptName, dataUrl: receiptFields.receiptDataUrl } : null);
+      closeOverlay('expenseOverlay');
+      render(); await saveData();
+    }catch(err){
+      alert('Không thể lưu hóa đơn lên máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Lưu khoản chi';
     }
-    setReceiptFor(expId, pendingReceipt ? { name: pendingReceipt.name, dataUrl: pendingReceipt.dataUrl } : null);
-    closeOverlay('expenseOverlay');
-    render(); await saveData();
   };
 
   document.getElementById('btnOpenSummary').onclick = ()=> openOverlay('summaryOverlay');
 
-  loadData().then(()=>{
-    // show the status popup automatically when the page opens
-    openOverlay('summaryOverlay');
-  });
+  function startApp(){
+    document.getElementById('pinOverlay').classList.remove('show');
+    document.getElementById('appRoot').style.display = 'block';
+    loadData().then(()=>{
+      // show the status popup automatically when the page opens
+      openOverlay('summaryOverlay');
+    });
+  }
+
+  function checkPin(){
+    const val = document.getElementById('pinInput').value.trim();
+    if(val === SHARED_PIN){
+      try{ sessionStorage.setItem(PIN_SESSION_KEY, '1'); }catch(e){}
+      document.getElementById('pinErr').style.display = 'none';
+      startApp();
+    } else {
+      document.getElementById('pinErr').style.display = 'block';
+    }
+  }
+  document.getElementById('pinSubmitBtn').onclick = checkPin;
+  document.getElementById('pinInput').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') checkPin(); });
+
+  let alreadyUnlocked = false;
+  try{ alreadyUnlocked = sessionStorage.getItem(PIN_SESSION_KEY) === '1'; }catch(e){}
+  if(alreadyUnlocked){
+    startApp();
+  } else {
+    document.getElementById('pinInput').focus();
+  }
 })();
 </script>
 </body>
