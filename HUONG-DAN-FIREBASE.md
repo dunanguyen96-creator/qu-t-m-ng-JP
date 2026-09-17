@@ -46,9 +46,11 @@ người lạ gọi thẳng vào API.
    Billing để yên tâm.
 3. Chọn khu vực giống Bước 2, bấm **Done**.
 
-*(Nếu chị chưa muốn khai báo thẻ, có thể bỏ qua bước này — bỏ trống
-`storageBucket` ở Bước 6, web vẫn chạy bình thường, chỉ riêng hóa đơn sẽ không
-đồng bộ qua thiết bị khác như đã trao đổi có thể chấp nhận tạm thời.)*
+*(Chị chưa muốn khai báo thẻ thì bỏ qua bước này hoàn toàn — không sao cả. Bỏ
+trống `storageBucket` ở Bước 6: web vẫn đồng bộ đầy đủ số tiền/ngày/ghi chú
+qua Firebase như bình thường, chỉ riêng ảnh/PDF hóa đơn sẽ lưu tại máy nào
+tải lên thì xem trên máy đó, không tự động hiện trên máy khác. Không cần
+sửa gì thêm trong code — web tự nhận ra chưa có Storage và xử lý đúng như vậy.)*
 
 ## Bước 5 — Cấu hình Rules (bảo mật dữ liệu)
 
@@ -65,7 +67,7 @@ người lạ gọi thẳng vào API.
 }
 ```
 
-**Storage → tab Rules**, thay nội dung bằng:
+**Storage → tab Rules** (chỉ áp dụng nếu chị đã làm Bước 4; bỏ qua nếu chưa dùng Storage), thay nội dung bằng:
 
 ```
 rules_version = '2';

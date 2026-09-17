@@ -1119,11 +1119,18 @@
         if(receiptFields.receiptPath) await deleteReceiptFromStorage(receiptFields.receiptPath);
         receiptFields = { receiptURL:null, receiptPath:null, receiptDataUrl:null, receiptName:null, receiptType:null };
       } else if(pendingReceipt.isNew){
-        if(USE_FIREBASE){
-          if(receiptFields.receiptPath) await deleteReceiptFromStorage(receiptFields.receiptPath); // thay hóa đơn cũ
-          const { url, path } = await uploadReceiptToStorage(expId, pendingReceipt);
-          receiptFields = { receiptURL:url, receiptPath:path, receiptDataUrl:null, receiptName:pendingReceipt.name, receiptType:pendingReceipt.type };
+        if(USE_FIREBASE && firebaseConfig.storageBucket){
+          try{
+            if(receiptFields.receiptPath) await deleteReceiptFromStorage(receiptFields.receiptPath); // thay hóa đơn cũ
+            const { url, path } = await uploadReceiptToStorage(expId, pendingReceipt);
+            receiptFields = { receiptURL:url, receiptPath:path, receiptDataUrl:null, receiptName:pendingReceipt.name, receiptType:pendingReceipt.type };
+          }catch(uploadErr){
+            // Storage lỗi/mất mạng -> vẫn lưu số liệu, chỉ hóa đơn rơi về lưu tạm trên máy này
+            receiptFields = { receiptURL:null, receiptPath:null, receiptDataUrl:pendingReceipt.dataUrl, receiptName:pendingReceipt.name, receiptType:pendingReceipt.type };
+          }
         } else {
+          // Chưa cấu hình Firebase Storage (ví dụ chưa muốn nâng cấp gói trả phí) ->
+          // hóa đơn chỉ lưu trên máy này, không chặn việc lưu số tiền/ngày/ghi chú.
           receiptFields = { receiptURL:null, receiptPath:null, receiptDataUrl:pendingReceipt.dataUrl, receiptName:pendingReceipt.name, receiptType:pendingReceipt.type };
         }
       }
