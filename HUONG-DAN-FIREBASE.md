@@ -1,6 +1,6 @@
 # Hướng dẫn kết nối Firebase cho web Quỹ tạm ứng
 
-Web (`quy-tam-ung.html`) đã được lập trình sẵn để đồng bộ dữ liệu 2 chiều qua
+Web (`index.html`) đã được lập trình sẵn để đồng bộ dữ liệu 2 chiều qua
 **Firebase Realtime Database** (số liệu tạm ứng/chi tiêu) và **Firebase Storage**
 (ảnh/PDF hóa đơn), cộng thêm **auto-save**: mọi lần thêm/sửa/xóa đều tự lưu ngay,
 không cần bấm nút "Lưu" riêng.
@@ -90,7 +90,7 @@ người ngoài gọi thẳng API Firebase sẽ bị chặn.
 2. Kéo xuống mục **"Your apps"** → bấm biểu tượng **`</>`** (Web) → đặt tên bất kỳ
    → **Register app**.
 3. Firebase hiện ra một đoạn `const firebaseConfig = {...}` — copy toàn bộ.
-4. Mở file `quy-tam-ung.html`, tìm dòng `const firebaseConfig = {` (khoảng dòng
+4. Mở file `index.html`, tìm dòng `const firebaseConfig = {` (khoảng dòng
    630) và dán đè các giá trị (`apiKey`, `authDomain`, `databaseURL`,
    `projectId`, `storageBucket`, `messagingSenderId`, `appId`).
    - Lưu ý `databaseURL` không tự có trong đoạn code Firebase đưa — lấy từ
@@ -105,7 +105,7 @@ link này đều thấy dữ liệu giống nhau ngay lập tức, không cần 
 
 ## Đổi mã PIN truy cập
 
-Trong `quy-tam-ung.html`, tìm dòng:
+Trong `index.html`, tìm dòng:
 
 ```js
 const SHARED_PIN = "2609";
@@ -124,9 +124,13 @@ liệu, để tránh mất dữ liệu vừa nhập.
 
 ## Lưu ý triển khai
 
-- File `quy-tam-ung.html` là một trang tĩnh — có thể mở trực tiếp, hoặc host
-  miễn phí qua Firebase Hosting / GitHub Pages để có một đường link cố định
-  gửi cho mọi người trong công ty.
+- File `index.html` là một trang tĩnh — có thể mở trực tiếp, hoặc host miễn
+  phí để có một đường link cố định gửi cho mọi người trong công ty. Xem
+  hướng dẫn deploy lên **Vercel** trong `HUONG-DAN-VERCEL.md`.
 - `apiKey` của Firebase Web không phải bí mật tuyệt đối (nó luôn lộ ra trong
   mã nguồn phía trình duyệt) — an toàn dữ liệu phụ thuộc vào **Rules** ở
   Bước 5, không phụ thuộc việc giấu `apiKey`.
+- Sau khi có domain Vercel (dạng `ten-du-an.vercel.app`), nhớ vào Firebase
+  Console → **Authentication → Settings → Authorized domains** → **Add
+  domain** để thêm domain đó vào — nếu không, đăng nhập ẩn danh (Bước 3) có
+  thể bị chặn trên domain mới.
